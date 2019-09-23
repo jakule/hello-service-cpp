@@ -22,8 +22,7 @@ conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-#find_package(cpprestsdk REQUIRED)
+add_executable(hello_service main.cpp src/handler.cpp)
 
-add_executable(hello_service main.cpp)
-
+target_include_directories(hello_service PUBLIC include)
 target_link_libraries(hello_service PUBLIC CONAN_PKG::cpprestsdk)
