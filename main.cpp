@@ -1,5 +1,7 @@
+#include <csignal>
 #include <handler.hpp>
 #include <memory>
+#include <thread>
 
 using namespace std;
 using namespace web;
@@ -8,6 +10,13 @@ using namespace utility;
 using namespace http::experimental::listener;
 
 std::unique_ptr<handler> g_httpHandler;
+static bool interrupt = false;
+std::condition_variable cv;
+
+void signal_handler(int signum) {
+  interrupt = true;
+  cv.notify_one();
+}
 
 void on_initialize(const string_t& address) {
   uri_builder uri(address);
@@ -32,10 +41,14 @@ int main(int argc, char* argv[]) {
   address.append(port);
 
   on_initialize(address);
-  std::cout << "Press ENTER to exit." << std::endl;
 
-  std::string line;
-  std::getline(std::cin, line);
+  signal(SIGINT, signal_handler);
+
+  std::cout << "Press Ctrl + C to exit." << std::endl;
+  std::mutex m;
+  std::unique_lock ul(m);
+  cv.wait(ul, []() { return interrupt; });
+  std::cout << "Closing app..." << std::endl;
 
   on_shutdown();
   return 0;
